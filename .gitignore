@@ -1,1 +1,9 @@
 build
+
+.pio
+.vscode
+
+dead
+temp
+work
+test
