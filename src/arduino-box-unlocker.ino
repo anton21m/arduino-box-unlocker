@@ -7,7 +7,7 @@ void dump_byte_array(byte * buffer, byte bufferSize);
 
 void setup() {
   Serial.begin(9600);
-  while (!Serial);
+  //while (!Serial);
 
   SPI.begin();
   Serial.println(F("MFRC522 Access Control Initialize."));
@@ -17,7 +17,7 @@ void setup() {
   pinMode(MAGNET_RELAY_PIN, OUTPUT);
   digitalWrite(MAGNET_RELAY_PIN, HIGH); // Реле магнита ВЫКЛ (заблокировано)
 
-  display.brightness(7);
+  display.brightness(4);
   display.clear();
   
   // Инициализация массива readerInitialized и других начальных состояний

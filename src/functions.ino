@@ -33,39 +33,28 @@ void InitializePuzzleState() {
 void updateDisplay() {
   uint8_t data[4];
 
-  // Если головоломка решена, показываем паттерн "000" (все сегменты горят) на первых 3 разрядах
-  if (puzzleSolved) {
-    data[0] = SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F; // Все сегменты горят
-    data[1] = SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F;
-    data[2] = SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F;
-  } else {
-    // Digit 0: MRFC Status (инициализация каждого считывателя)
-    uint8_t initSegments = 0;
-    for (uint8_t i = 0; i < NR_OF_READERS; i++) {
-      if (readerInitialized[i]) {
-        initSegments |= READER_SEGMENT_MAPPING[i];
-      }
-    }
-    data[0] = initSegments;
+  // Digit 0: MRFC Status (инициализация каждого считывателя)
+  uint8_t initSegments = 0;
+  // Digit 1: Cards Present (наличие карт на каждом считывателе)
+  uint8_t cardsPresentSegments = 0;
+  // Digit 2: Cards Correct (правильность карт на каждом считывателе)
+  uint8_t cardsCorrectSegments = 0;
 
-    // Digit 1: Cards Present (наличие карт на каждом считывателе)
-    uint8_t cardsPresentSegments = 0;
-    for (uint8_t i = 0; i < NR_OF_READERS; i++) {
-      if (readerHasCard[i]) {
-        cardsPresentSegments |= READER_SEGMENT_MAPPING[i];
-      }
+  for (uint8_t i = 0; i < NR_OF_READERS; i++) {
+    if (readerInitialized[i]) {
+      initSegments |= READER_SEGMENT_MAPPING[i];
     }
-    data[1] = cardsPresentSegments;
-
-    // Digit 2: Cards Correct (правильность карт на каждом считывателе)
-    uint8_t cardsCorrectSegments = 0;
-    for (uint8_t i = 0; i < NR_OF_READERS; i++) {
-      if (readerHasCorrectCard[i]) {
-        cardsCorrectSegments |= READER_SEGMENT_MAPPING[i];
-      }
+    if (readerHasCard[i]) {
+      cardsPresentSegments |= READER_SEGMENT_MAPPING[i];
     }
-    data[2] = cardsCorrectSegments;
+    if (readerHasCorrectCard[i]) {
+      cardsCorrectSegments |= READER_SEGMENT_MAPPING[i];
+    }
   }
+  data[0] = initSegments;
+  data[1] = cardsPresentSegments;
+  data[2] = cardsCorrectSegments;
+  
 
   // Digit 3: Relay States
   // Segment A: Red Relay (error) status (активен, если LOW -> Красный LED горит)
