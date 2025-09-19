@@ -3,8 +3,13 @@
   "author": "Anton Shumeuko",
   "editor": "wokwi",
   "parts": [
-    { "type": "wokwi-relay-module", "id": "led-red", "top": -124.6, "left": 259.2, "attrs": {} },
-    { "type": "wokwi-relay-module", "id": "magnit", "top": 9.8, "left": 259.2, "attrs": {} },
+    {
+      "type": "wokwi-relay-module",
+      "id": "relay-access",
+      "top": -124.6,
+      "left": 259.2,
+      "attrs": {}
+    },
     { "type": "chip-rfid-rc522", "id": "chip1", "top": -430.98, "left": -235.2, "attrs": {} },
     { "type": "chip-rfid-rc522", "id": "chip2", "top": -430.98, "left": -110.4, "attrs": {} },
     { "type": "chip-rfid-rc522", "id": "chip3", "top": -430.98, "left": 14.4, "attrs": {} },
@@ -21,25 +26,17 @@
     },
     {
       "type": "wokwi-led",
-      "id": "led1",
+      "id": "lock-magnet",
       "top": -147.6,
       "left": 493.8,
       "attrs": { "color": "red", "flip": "1" }
-    },
-    {
-      "type": "wokwi-led",
-      "id": "led3",
-      "top": -10.8,
-      "left": 496.2,
-      "rotate": 90,
-      "attrs": { "color": "purple" }
     },
     { "type": "wokwi-vcc", "id": "vcc1", "top": -24.2, "left": 656.84, "rotate": 90, "attrs": {} },
     { "type": "wokwi-gnd", "id": "gnd1", "top": -75.9, "left": 613.3, "rotate": 270, "attrs": {} },
     {
       "type": "wokwi-led",
-      "id": "led4",
-      "top": -84.8,
+      "id": "led-open",
+      "top": 30.4,
       "left": 493.8,
       "rotate": 180,
       "attrs": { "color": "limegreen", "flip": "" }
@@ -88,24 +85,18 @@
     [ "chip5:MISO", "uno:12", "blue", [ "h19.2", "v-76.8", "h230.4", "v336", "h-451.7" ] ],
     [ "chip5:MOSI", "uno:11", "violet", [ "h96", "v192", "h-394.2" ] ],
     [ "chip5:VCC", "uno:3.3V", "red", [ "h57.6", "v451.2", "h-119.4" ] ],
-    [ "magnit:NC", "led3:A", "orange", [ "v0" ] ],
     [ "display:GND", "uno:GND.3", "black", [ "h0" ] ],
     [ "display:VCC", "uno:5V", "red", [ "h0" ] ],
     [ "display:DIO", "uno:A5", "gold", [ "h355.2", "v-47.9" ] ],
     [ "display:CLK", "uno:A4", "blue", [ "h0" ] ],
-    [ "uno:5V", "led-red:VCC", "red", [ "v0" ] ],
-    [ "led-red:GND", "uno:GND.3", "black", [ "h0" ] ],
-    [ "magnit:VCC", "uno:5V", "red", [ "h0" ] ],
-    [ "magnit:GND", "uno:GND.3", "black", [ "h0" ] ],
-    [ "uno:A3", "magnit:IN", "limegreen", [ "v0" ] ],
-    [ "uno:A1", "led-red:IN", "violet", [ "v0" ] ],
-    [ "vcc1:VCC", "led-red:COM", "red", [ "v-86.4", "h-279.6" ] ],
-    [ "led1:A", "led-red:NC", "orange", [ "h0" ] ],
-    [ "led4:A", "led-red:NO", "orange", [ "h0" ] ],
-    [ "led4:C", "gnd1:GND", "black", [ "v-38", "h105.6" ] ],
-    [ "led1:C", "gnd1:GND", "black", [ "h86", "v28.8" ] ],
-    [ "vcc1:VCC", "magnit:COM", "red", [ "v0" ] ],
-    [ "led3:C", "gnd1:GND", "black", [ "v-28.4", "h105.6" ] ]
+    [ "uno:5V", "relay-access:VCC", "red", [ "v0" ] ],
+    [ "relay-access:GND", "uno:GND.3", "black", [ "h0" ] ],
+    [ "uno:A1", "relay-access:IN", "violet", [ "v0" ] ],
+    [ "vcc1:VCC", "relay-access:COM", "red", [ "v-86.4", "h-279.6" ] ],
+    [ "lock-magnet:A", "relay-access:NC", "orange", [ "h0" ] ],
+    [ "led-open:A", "relay-access:NO", "orange", [ "h0" ] ],
+    [ "led-open:C", "gnd1:GND", "black", [ "h86", "v-96" ] ],
+    [ "lock-magnet:C", "gnd1:GND", "black", [ "h86", "v48" ] ]
   ],
   "dependencies": { "chip-rfid-rc522": "github:anton21m/wokwi-rc522-rfid-chip@0.1.1" }
 }

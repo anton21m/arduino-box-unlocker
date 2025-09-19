@@ -56,17 +56,17 @@ void updateDisplay() {
   data[2] = cardsCorrectSegments;
   
 
-  // Digit 3: Relay States
-  // Segment A: Red Relay (error) status (активен, если LOW -> Красный LED горит)
-  // Segment D: Magnet Relay (lock) status (активен, если LOW - разблокирован)
+  // Digit 3: Состояние доступа (замка)
+  // Segment A: Индикация "Разблокировано" (соответствует зеленому LED)
+  // Segment D: Индикация "Заблокировано" (соответствует красному LED)
   uint8_t relayStatus = 0;
-  // RED_RELAY_PIN == LOW означает "красный LED ON" (ошибка)
-  if (digitalRead(RED_RELAY_PIN) == LOW) { // Если RED_RELAY_PIN НИЗКИЙ (красный LED активен)
-    relayStatus |= SEG_A; // Активировать сегмент A для индикации ошибки
+  // Если ACCESS_RELAY_PIN == HIGH (реле ВКЛ) -> Разблокировано (зеленый LED ON)
+  if (digitalRead(ACCESS_RELAY_PIN) == HIGH) {
+    relayStatus |= SEG_A; // Активируем сегмент A для индикации "Разблокировано"
+  } else { // Если ACCESS_RELAY_PIN == LOW (реле ВЫКЛ) -> Заблокировано (красный LED ON)
+    relayStatus |= SEG_D; // Активируем сегмент D для индикации "Заблокировано"
   }
-  if (digitalRead(MAGNET_RELAY_PIN) == LOW) { // Если Magnet Relay активен (LOW - разблокирован)
-    relayStatus |= SEG_D; // Активировать сегмент D для индикации UNLOCKED
-  }
+  
   data[3] = relayStatus;
 
   display.displayByte(data);

@@ -18,9 +18,7 @@
 #define DIO_DISPLAY     A5
 
 // Relay Pins
-#define RED_RELAY_PIN   A0  // Реле для красного/зеленого светодиодов
-#define MAGNET_RELAY_PIN A1 // Реле для магнита
-
+#define ACCESS_RELAY_PIN A1 // Реле для управления замком и индикацией состояния (зеленый/красный LED)
 #define NR_OF_READERS   6
 
 // Define segment bit patterns for clarity

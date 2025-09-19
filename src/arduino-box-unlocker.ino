@@ -12,14 +12,15 @@ void setup() {
   SPI.begin();
   Serial.println(F("MFRC522 Access Control Initialize."));
 
-  pinMode(RED_RELAY_PIN, OUTPUT);
-  digitalWrite(RED_RELAY_PIN, LOW); // Красный LED горит (ошибка по умолчанию)
+  pinMode(ACCESS_RELAY_PIN, OUTPUT);
 
-  pinMode(MAGNET_RELAY_PIN, OUTPUT);
-  digitalWrite(MAGNET_RELAY_PIN, HIGH); // Реле магнита ВЫКЛ (заблокировано)
+  // Начальное состояние реле: LOW выключает реле.
+  // Согласно схеме: ACCESS_RELAY_PIN LOW -> реле ВЫКЛ -> COM на NC -> lock-magnet (красный) горит.
+  // Это соответствует состоянию "заблокировано" при старте.
+  digitalWrite(ACCESS_RELAY_PIN, LOW); // По умолчанию "заблокировано" (красный LED ON) при старте
 
-  display.brightness(4);
   display.clear();
+  display.brightness(3); // Уменьшаем яркость дисплея
   
   // Инициализация массива readerInitialized и других начальных состояний
   InitializePuzzleState(); // Вызывается один раз в setup для начальной настройки
@@ -53,9 +54,9 @@ void setup() {
   delay(50);
 }
 
-  
 void loop() {
-  // Уменьшаем общую задержку, чтобы система была более отзывчивой
+  // Фиксированная задержка между полными циклами сканирования.
+  // Обратите внимание: эта задержка замедляет опрос считывателей.
   delay(200);
 
   // Сбрасываем состояние головоломки для каждой итерации
@@ -97,6 +98,7 @@ void loop() {
     // Выключаем антенну, чтобы она не мешала другим считывателям
     mfrc522[reader_idx].PCD_AntennaOff();
     }
+
   // Агрегация данных после сканирования всех считывателей
   for (uint8_t i = 0; i < NR_OF_READERS; i++) {
     if (readerHasCard[i]) {
@@ -110,23 +112,18 @@ void loop() {
   // Обновляем флаг puzzleSolved
   puzzleSolved = (currentTotalCorrectCards == NR_OF_READERS);
 
-  // Управление красным реле (индикатор ошибки/успех)
-  // LOW = Красный LED горит (ошибка/не все карты)
-  // HIGH = Зеленый LED горит (успех/все карты корректны)
+  // Логика управления единственным реле (ACCESS_RELAY_PIN)
+  // Согласно схеме и желаемой логике:
+  // ACCESS_RELAY_PIN HIGH (реле ВКЛ) -> COM на NO -> led-open (зеленый) горит (ДВЕРЬ РАЗБЛОКИРОВАНА)
+  // ACCESS_RELAY_PIN LOW (реле ВЫКЛ) -> COM на NC -> lock-magnet (красный) горит (ДВЕРЬ ЗАБЛОКИРОВАНА)
   if (puzzleSolved) {
-    digitalWrite(RED_RELAY_PIN, HIGH); // Зеленый LED горит (успех)
-    Serial.println("Welcome! All tags correct.");
+    // Если головоломка решена, ДВЕРЬ РАЗБЛОКИРОВАНА (зеленый LED ON)
+    digitalWrite(ACCESS_RELAY_PIN, HIGH); // Реле ВКЛ -> РАЗБЛОКИРОВАНО
+    Serial.println("Welcome! All tags correct. Door is now UNLOCKED.");
   } else {
-    digitalWrite(RED_RELAY_PIN, LOW);  // Красный LED горит (ошибка)
-    Serial.println("System needs " + String(NR_OF_READERS - currentTotalCorrectCards) + " more correct cards.");
-  }
-
-  // Управление магнитным реле (замок)
-  if (puzzleSolved) {
-    digitalWrite(MAGNET_RELAY_PIN, LOW);  // Магнитное реле ВКЛ (разблокировано)
-    Serial.println("Door is now open.");
-  } else {
-    digitalWrite(MAGNET_RELAY_PIN, HIGH); // Магнитное реле ВЫКЛ (заблокировано)
+    // Если головоломка НЕ решена, ДВЕРЬ ЗАБЛОКИРОВАНА (красный LED ON)
+    digitalWrite(ACCESS_RELAY_PIN, LOW); // Реле ВЫКЛ -> ЗАБЛОКИРОВАНО
+    Serial.println("System needs " + String(NR_OF_READERS - currentTotalCorrectCards) + " more correct cards. Door is LOCKED.");
   }
 
   Serial.print("Cards Present: ");
