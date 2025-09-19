@@ -5,7 +5,7 @@
 #include <GyverTM1637.h> // Включаем здесь, чтобы тип GyverTM1637 был известен для extern
 
 // PIN Numbers : RESET + SDAs
-#define RST_PIN         9
+#define RST_PIN         9 // подтвердил
 #define SS_1_PIN        2
 #define SS_2_PIN        3
 #define SS_3_PIN        4
@@ -18,8 +18,8 @@
 #define DIO_DISPLAY     A5
 
 // Relay Pins
-#define RED_RELAY_PIN   A1  // Реле для красного/зеленого светодиодов
-#define MAGNET_RELAY_PIN A3 // Реле для магнита
+#define RED_RELAY_PIN   A0  // Реле для красного/зеленого светодиодов
+#define MAGNET_RELAY_PIN A1 // Реле для магнита
 
 #define NR_OF_READERS   6
 
