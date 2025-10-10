@@ -91,7 +91,7 @@
     [ "display:CLK", "uno:A4", "blue", [ "h0" ] ],
     [ "uno:5V", "relay-access:VCC", "red", [ "v0" ] ],
     [ "relay-access:GND", "uno:GND.3", "black", [ "h0" ] ],
-    [ "uno:A1", "relay-access:IN", "violet", [ "v0" ] ],
+    [ "uno:A0", "relay-access:IN", "violet", [ "v0" ] ],
     [ "vcc1:VCC", "relay-access:COM", "red", [ "v-86.4", "h-279.6" ] ],
     [ "lock-magnet:A", "relay-access:NC", "orange", [ "h0" ] ],
     [ "led-open:A", "relay-access:NO", "orange", [ "h0" ] ],

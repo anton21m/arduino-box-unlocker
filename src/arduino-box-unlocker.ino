@@ -57,13 +57,26 @@ void setup() {
 void loop() {
   // Фиксированная задержка между полными циклами сканирования.
   // Обратите внимание: эта задержка замедляет опрос считывателей.
-  delay(200);
+  delay(2000);
 
   // Сбрасываем состояние головоломки для каждой итерации
   InitializePuzzleState();
 
   // Сканирование всех считывателей
   for (uint8_t reader_idx = 0; reader_idx < NR_OF_READERS; reader_idx++) {
+
+    // Проверка связи со считывателем в каждом цикле
+    byte version = mfrc522[reader_idx].PCD_ReadRegister(MFRC522::VersionReg);
+    if (version == 0x00 || version == 0xFF) {
+      Serial.print(":ERR Version: on id: ");
+      Serial.print(reader_idx);
+      Serial.print("-> ");
+      Serial.println(version);
+      readerInitialized[reader_idx] = false;
+    } else {
+      readerInitialized[reader_idx] = true;
+    }
+
     // Включаем антенну только для текущего считывателя
     mfrc522[reader_idx].PCD_AntennaOn();
     delay(10); // Короткая пауза для стабилизации поля
