@@ -6,14 +6,22 @@ void updateDisplay();
 void dump_byte_array(byte * buffer, byte bufferSize);
 
 void setup() {
+  delay(1000);
+
+  pinMode(RST_PIN, OUTPUT); // Убедимся, что пин настроен как выход
+  digitalWrite(RST_PIN, LOW); // Импульс: сначала LOW
+  delay(5);                   // Краткая пауза
+  digitalWrite(RST_PIN, HIGH); // затем HIGH для выхода из сброса
+  delay(1000);                  // Даём время чипам ожить
+
+
   Serial.begin(9600);
-  //while (!Serial);
-
   SPI.begin();
+  
   Serial.println(F("MFRC522 Access Control Initialize."));
-
+  
+  // Инициализация реле и дисплея...
   pinMode(ACCESS_RELAY_PIN, OUTPUT);
-
   // Начальное состояние реле: LOW выключает реле.
   // Согласно схеме: ACCESS_RELAY_PIN LOW -> реле ВЫКЛ -> COM на NC -> lock-magnet (красный) горит.
   // Это соответствует состоянию "заблокировано" при старте.
@@ -21,27 +29,57 @@ void setup() {
 
   display.clear();
   display.brightness(3); // Уменьшаем яркость дисплея
-  
-  // Инициализация массива readerInitialized и других начальных состояний
-  InitializePuzzleState(); // Вызывается один раз в setup для начальной настройки
 
+  InitializePuzzleState();
+  
+  // ------------------------------------------------------------------
+  //  ИЗМЕНЕННЫЙ БЛОК: Повторная инициализация
+  // ------------------------------------------------------------------
   for (uint8_t reader = 0; reader < NR_OF_READERS; reader++) {
-    mfrc522[reader].PCD_Init(ssPins[reader], RST_PIN);
-    Serial.print(F("Reader "));
-    Serial.print(reader);
-    Serial.print(F(": "));
-    byte version = mfrc522[reader].PCD_ReadRegister(MFRC522::VersionReg);
-    if (version == 0x00 || version == 0xFF) {
-      Serial.println(F("WARNING: Communication failure, is the MFRC522 properly connected?"));
-      readerInitialized[reader] = false; // Отметить как неинициализированный
-    } else {
+    bool success = false;
+    byte version = 0x00;
+    int attempt = 0;
+    
+    // Пытаемся инициализировать чип до 5 раз
+    while (!success && attempt < 5) { 
+      mfrc522[reader].PCD_Init(ssPins[reader], RST_PIN);
+      version = mfrc522[reader].PCD_ReadRegister(MFRC522::VersionReg);
+      
+      if (version == 0x92) {
+        success = true;
+      } else {
+        attempt++;
+        Serial.print(F("Reader "));
+        Serial.print(reader);
+        Serial.print(F(": Attempt "));
+        Serial.print(attempt);
+        Serial.print(F(" failed (Code "));
+        Serial.print(version);
+        Serial.println(F("). Retrying..."));
+        
+        // Даём чипу время восстановиться перед следующей попыткой
+        delay(200); 
+      }
+    }
+    
+    // Вывод результата
+    if (success) {
+      Serial.print(F("Reader "));
+      Serial.print(reader);
+      Serial.print(F(": "));
       mfrc522[reader].PCD_DumpVersionToSerial();
       initializedReadersCount++;
       readerInitialized[reader] = true; // Отметить как инициализированный
+    } else {
+      Serial.print(F("Reader "));
+      Serial.print(reader);
+      Serial.println(F(": FAILED after 5 attempts."));
+      readerInitialized[reader] = false;
     }
-    delay(20);
+    delay(50); // Короткая пауза перед следующим чипом
   }
-
+  // ------------------------------------------------------------------
+  
   Serial.print(F("Initialized "));
   Serial.print(initializedReadersCount);
   Serial.print(F(" / "));
@@ -51,13 +89,13 @@ void setup() {
   updateDisplay(); // Обновить дисплей после инициализации
 
   // Уменьшаем общую задержку, чтобы система была более отзывчивой
-  delay(50);
+  delay(100);
 }
 
 void loop() {
   // Фиксированная задержка между полными циклами сканирования.
   // Обратите внимание: эта задержка замедляет опрос считывателей.
-  delay(2000);
+  delay(1000);
 
   // Сбрасываем состояние головоломки для каждой итерации
   InitializePuzzleState();
@@ -67,7 +105,7 @@ void loop() {
 
     // Проверка связи со считывателем в каждом цикле
     byte version = mfrc522[reader_idx].PCD_ReadRegister(MFRC522::VersionReg);
-    if (version == 0x00 || version == 0xFF) {
+    if (version != 0x92) {
       Serial.print(":ERR Version: on id: ");
       Serial.print(reader_idx);
       Serial.print("-> ");
@@ -79,7 +117,7 @@ void loop() {
 
     // Включаем антенну только для текущего считывателя
     mfrc522[reader_idx].PCD_AntennaOn();
-    delay(10); // Короткая пауза для стабилизации поля
+    delay(30); // Короткая пауза для стабилизации поля
 
     // Сразу проверяем наличие карты и читаем её UID
     if (mfrc522[reader_idx].PICC_IsNewCardPresent() && mfrc522[reader_idx].PICC_ReadCardSerial()) {
