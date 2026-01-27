@@ -6,17 +6,22 @@ void updateDisplay();
 void dump_byte_array(byte * buffer, byte bufferSize);
 
 void setup() {
-  delay(1000);
+  //delay(1000);
 
   pinMode(RST_PIN, OUTPUT); // Убедимся, что пин настроен как выход
   digitalWrite(RST_PIN, LOW); // Импульс: сначала LOW
-  delay(5);                   // Краткая пауза
+  delay(3000);                   // Краткая пауза
   digitalWrite(RST_PIN, HIGH); // затем HIGH для выхода из сброса
   delay(1000);                  // Даём время чипам ожить
 
 
   Serial.begin(9600);
   SPI.begin();
+
+  digitalWrite(RST_PIN, HIGH); 
+  delay(500); // Даем чипам полсекунды, чтобы прийти в себя после сброса
+
+  //SPI.setClockDivider(SPI_CLOCK_DIV8); // не работает
   
   Serial.println(F("MFRC522 Access Control Initialize."));
   
@@ -45,9 +50,10 @@ void setup() {
       mfrc522[reader].PCD_Init(ssPins[reader], RST_PIN);
       version = mfrc522[reader].PCD_ReadRegister(MFRC522::VersionReg);
       
-      if (version == 0x92) {
+      if (version != 0x00 && version != 0xFF) {
         success = true;
       } else {
+        
         attempt++;
         Serial.print(F("Reader "));
         Serial.print(reader);
@@ -58,6 +64,7 @@ void setup() {
         Serial.println(F("). Retrying..."));
         
         // Даём чипу время восстановиться перед следующей попыткой
+        digitalWrite(ssPins[reader], HIGH);
         delay(200); 
       }
     }
@@ -105,14 +112,18 @@ void loop() {
 
     // Проверка связи со считывателем в каждом цикле
     byte version = mfrc522[reader_idx].PCD_ReadRegister(MFRC522::VersionReg);
-    if (version != 0x92) {
+    if (version != 0x00 && version != 0xFF) {
+      readerInitialized[reader_idx] = true;
+      
+    } else {
       Serial.print(":ERR Version: on id: ");
       Serial.print(reader_idx);
       Serial.print("-> ");
       Serial.println(version);
       readerInitialized[reader_idx] = false;
-    } else {
-      readerInitialized[reader_idx] = true;
+
+      digitalWrite(ssPins[reader_idx], HIGH);
+      delay(100);
     }
 
     // Включаем антенну только для текущего считывателя
@@ -124,7 +135,10 @@ void loop() {
       readerHasCard[reader_idx] = true;
       Serial.print("Card on Reader ");
       Serial.print(reader_idx);
-      Serial.print(F(": UID:"));
+      Serial.print(" ");
+      version = mfrc522[reader_idx].PCD_ReadRegister(MFRC522::VersionReg);
+      Serial.print(version);
+      Serial.print(F(" : UID:"));
       dump_byte_array(mfrc522[reader_idx].uid.uidByte, mfrc522[reader_idx].uid.size);
       Serial.println();
 

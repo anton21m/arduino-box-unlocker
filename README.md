@@ -78,3 +78,8 @@ arduino-cli compile --fqbn arduino:avr:uno arduino-bomba.ino --output-dir build
 arduino-cli lib install GyverTM1637
 arduino-cli lib install "MFRC522"
 ```
+
+# changlog релизов
+- 26.01.2026 (1.1) заменен блок питания на зарядку usb-type-b, добавлен reset на 2 секунды. Также добавлен поднятие sspins перед каждой попыткой для уменьшения шума.
+- 14.11.2025 Добавлены 2 чипа 74hct125 для стабильности, залиты все соединения горячим клеем.
+- 19.08.2025 (1.0) Первая версия, глючная
