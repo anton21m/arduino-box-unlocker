@@ -27,10 +27,7 @@ void setup() {
   
   // Инициализация реле и дисплея...
   pinMode(ACCESS_RELAY_PIN, OUTPUT);
-  // Начальное состояние реле: LOW выключает реле.
-  // Согласно схеме: ACCESS_RELAY_PIN LOW -> реле ВЫКЛ -> COM на NC -> lock-magnet (красный) горит.
-  // Это соответствует состоянию "заблокировано" при старте.
-  digitalWrite(ACCESS_RELAY_PIN, LOW); // По умолчанию "заблокировано" (красный LED ON) при старте
+  digitalWrite(ACCESS_RELAY_PIN, LOW); // разблокировано пока все датчики не иницилизированы
 
   display.clear();
   display.brightness(3); // Уменьшаем яркость дисплея
@@ -46,11 +43,11 @@ void setup() {
     int attempt = 0;
     
     // Пытаемся инициализировать чип до 5 раз
-    while (!success && attempt < 5) { 
+    while (!success && attempt < 99999999999999) { 
       mfrc522[reader].PCD_Init(ssPins[reader], RST_PIN);
       version = mfrc522[reader].PCD_ReadRegister(MFRC522::VersionReg);
       
-      if (version != 0x00 && version != 0xFF) {
+      if (version == 0x92) {
         success = true;
       } else {
         
@@ -65,7 +62,7 @@ void setup() {
         
         // Даём чипу время восстановиться перед следующей попыткой
         digitalWrite(ssPins[reader], HIGH);
-        delay(200); 
+        delay(1000); 
       }
     }
     
@@ -86,6 +83,11 @@ void setup() {
     delay(50); // Короткая пауза перед следующим чипом
   }
   // ------------------------------------------------------------------
+
+  // Начальное состояние реле: LOW выключает реле.
+  // Согласно схеме: ACCESS_RELAY_PIN LOW -> реле ВЫКЛ -> COM на NC -> lock-magnet (красный) горит.
+  // Это соответствует состоянию "заблокировано" при старте.
+  digitalWrite(ACCESS_RELAY_PIN, LOW); // По умолчанию "заблокировано" (красный LED ON) при старте
   
   Serial.print(F("Initialized "));
   Serial.print(initializedReadersCount);
