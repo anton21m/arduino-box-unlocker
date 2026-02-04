@@ -5,9 +5,35 @@ void InitializePuzzleState();
 void updateDisplay();
 void dump_byte_array(byte * buffer, byte bufferSize);
 
+int blinkRedCycles = 0;
+int prevTotalCorrectCards = 0;
+
+
+void addBlinkRedLedCount() {
+  blinkRedCycles = 10;
+}
+
+void setLedStates(bool red_on, bool blue_on) {
+
+  // Common Anode 
+  //digitalWrite(A3, red_on ? LOW : HIGH);  // A3 is red LED (LOW = ON, HIGH = OFF)
+  //digitalWrite(A2, blue_on ? LOW : HIGH); // A2 is blue LED (LOW = ON, HIGH = OFF)
+
+  // Common Cathode
+  digitalWrite(A3, !red_on ? LOW : HIGH);  // A3 is red LED (LOW = ON, HIGH = OFF)
+  digitalWrite(A2, !blue_on ? LOW : HIGH); // A2 is blue LED (LOW = ON, HIGH = OFF)
+}
+
+// Initialize LED pins and turn them off
+void initLed() {
+  pinMode(A3, OUTPUT); // red leds
+  pinMode(A2, OUTPUT); // blue led
+  setLedStates(false, false); // Ensure both are off initially
+}
+
 void setup() {
   //delay(1000);
-
+  initLed();
   pinMode(RST_PIN, OUTPUT); // Убедимся, что пин настроен как выход
   digitalWrite(RST_PIN, LOW); // Импульс: сначала LOW
   delay(3000);                   // Краткая пауза
@@ -42,7 +68,7 @@ void setup() {
     byte version = 0x00;
     int attempt = 0;
     
-    // Пытаемся инициализировать чип до 5 раз
+    // Пытаемся инициализировать чип до XX раз
     while (!success && attempt < 99999999999999) { 
       mfrc522[reader].PCD_Init(ssPins[reader], RST_PIN);
       version = mfrc522[reader].PCD_ReadRegister(MFRC522::VersionReg);
@@ -102,15 +128,47 @@ void setup() {
 }
 
 void loop() {
+
+  // Делаем моргание если есть счетчик
+  if (blinkRedCycles) {
+    setLedStates(true, puzzleSolved);
+  }
+  
+
   // Фиксированная задержка между полными циклами сканирования.
   // Обратите внимание: эта задержка замедляет опрос считывателей.
   delay(1000);
+  
+  // Делаем моргание если есть счетчик
+  if (blinkRedCycles) {
+    setLedStates(false, puzzleSolved);
+    blinkRedCycles -= 1;
+  }
 
+  if (prevTotalCorrectCards != currentTotalCorrectCards) {
+    addBlinkRedLedCount();
+  }
+
+  prevTotalCorrectCards = currentTotalCorrectCards;
+
+  
   // Сбрасываем состояние головоломки для каждой итерации
   InitializePuzzleState();
 
+  // делаем сброс циклически для борьбы с багом циклического зависания (fix от alexgyver)
+  digitalWrite(RST_PIN, HIGH);          // Сбрасываем все модули
+  delayMicroseconds(2);                 // Ждем 2 мкс
+  digitalWrite(RST_PIN, LOW);           // Отпускаем сброс на всех модулях
+  delay(50);
+
   // Сканирование всех считывателей
   for (uint8_t reader_idx = 0; reader_idx < NR_OF_READERS; reader_idx++) {
+
+    mfrc522[reader_idx].PCD_Init(ssPins[reader_idx], RST_PIN); // Инициализируем заново (fix от alexgyver)
+
+    // Включаем антенну только для текущего считывателя
+    mfrc522[reader_idx].PCD_AntennaOn();
+    delay(30); // Короткая пауза для стабилизации поля
 
     // Проверка связи со считывателем в каждом цикле
     byte version = mfrc522[reader_idx].PCD_ReadRegister(MFRC522::VersionReg);
@@ -138,7 +196,6 @@ void loop() {
       Serial.print("Card on Reader ");
       Serial.print(reader_idx);
       Serial.print(" ");
-      version = mfrc522[reader_idx].PCD_ReadRegister(MFRC522::VersionReg);
       Serial.print(version);
       Serial.print(F(" : UID:"));
       dump_byte_array(mfrc522[reader_idx].uid.uidByte, mfrc522[reader_idx].uid.size);

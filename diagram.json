@@ -40,6 +40,38 @@
       "left": 493.8,
       "rotate": 180,
       "attrs": { "color": "limegreen", "flip": "" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 225.6,
+      "left": 95.45,
+      "rotate": 90,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r2",
+      "top": 225.6,
+      "left": 143.45,
+      "rotate": 90,
+      "attrs": { "value": "220" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led1",
+      "top": 280,
+      "left": 109.8,
+      "rotate": 180,
+      "attrs": { "color": "blue" }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led2",
+      "top": 280,
+      "left": 157.8,
+      "rotate": 180,
+      "attrs": { "color": "red", "flip": "" }
     }
   ],
   "connections": [
@@ -96,7 +128,13 @@
     [ "lock-magnet:A", "relay-access:NC", "orange", [ "h0" ] ],
     [ "led-open:A", "relay-access:NO", "orange", [ "h0" ] ],
     [ "led-open:C", "gnd1:GND", "black", [ "h86", "v-96" ] ],
-    [ "lock-magnet:C", "gnd1:GND", "black", [ "h86", "v48" ] ]
+    [ "lock-magnet:C", "gnd1:GND", "black", [ "h86", "v48" ] ],
+    [ "uno:A2", "r1:1", "blue", [ "v0" ] ],
+    [ "uno:A3", "r2:1", "red", [ "v0" ] ],
+    [ "r1:2", "led1:A", "blue", [ "h0" ] ],
+    [ "r2:2", "led2:A", "red", [ "h0" ] ],
+    [ "led1:C", "uno:GND.3", "black", [ "v-115.2", "h-23.6" ] ],
+    [ "led2:C", "uno:GND.3", "black", [ "v-115.2", "h-71.6" ] ]
   ],
   "dependencies": { "chip-rfid-rc522": "github:anton21m/wokwi-rc522-rfid-chip@0.1.1" }
 }
