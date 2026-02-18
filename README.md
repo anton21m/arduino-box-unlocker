@@ -90,3 +90,16 @@ arduino-cli lib install "MFRC522"
 - 26.01.2026 (1.1) заменен блок питания на зарядку usb-type-b, добавлен reset на 2 секунды. Также добавлен поднятие sspins перед каждой попыткой для уменьшения шума.
 - 14.11.2025 Добавлены 2 чипа 74hct125 для стабильности, залиты все соединения горячим клеем.
 - 19.08.2025 (1.0) Первая версия, глючная
+
+
+# библиотеки MRFC522
+- https://github.com/miguelbalboa/rfid (v1.4.12, 17.02.2025)
+- https://github.com/pablo-sampaio/easy_mfrc522 (v0.2.2, 04.22.2022)
+- https://github.com/makerspaceleiden/rfid (v0.2.2, 03.28.2020)
+- https://github.com/obsttube/mfrc522_ntag424dna (v1.0.1, 07.09.2023)
+- (fork miguelbalboa) https://github.com/nfc-rfid-reader-sdk/MFRC522_PN512 (v1.4.12, 25.06.2024)
+- (fork miguelbalboa) https://github.com/boerge1/rfid (v1.4.12, 16.02.2025)
+- https://github.com/TheNitek/NDEF (v2.0.1, 02.06.2022)
+- (fork miguelbalboa) https://github.com/OSSLibraries/Arduino_MFRC522v2 (v2.0.6, 26.12.2024)
+
+Еще хлам https://github.com/search?q=MFRC522+language%3AC%2B%2B&type=repositories&l=C%2B%2B

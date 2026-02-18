@@ -2,6 +2,71 @@
 #define CONFIG_H
 
 #include <MFRC522.h>     // Включаем здесь, чтобы типы MFRC522 были известны для extern
+
+class WrapMFRC522 {
+    private:
+        MFRC522 mfrc522;
+
+    public:
+        // Пустой конструктор для массивов
+        WrapMFRC522() : mfrc522(0, 0) {}
+        
+        // Конструктор с параметрами
+        WrapMFRC522(byte ssPin, byte rstPin) : mfrc522(ssPin, rstPin) {}
+
+        // Инициализация
+        void PCD_Init() {
+            mfrc522.PCD_Init();
+        }
+
+        // Инициализация с переназначением пинов (нужна для вашего hardReset)
+        void PCD_Init(byte ssPin, byte rstPin) {
+            mfrc522.PCD_Init(ssPin, rstPin);
+        }
+
+        // Антенна
+        void PCD_AntennaOn()  { mfrc522.PCD_AntennaOn(); }
+        void PCD_AntennaOff() { mfrc522.PCD_AntennaOff(); }
+
+        // Чтение регистра (принимает просто число)
+        byte PCD_ReadRegister(byte reg) {
+            return mfrc522.PCD_ReadRegister((MFRC522::PCD_Register)reg);
+        }
+
+        // ОСТАВЛЯЕМ ТОЛЬКО ОДИН VersionReg
+        // 0x37 - это адрес регистра версии для чипа RC522
+        static const byte VersionReg = (0x37 << 1);
+
+        // Работа с картами
+        bool PICC_IsNewCardPresent() {
+            return mfrc522.PICC_IsNewCardPresent();
+        }
+
+        bool PICC_ReadCardSerial() {
+            return mfrc522.PICC_ReadCardSerial();
+        }
+
+        // Дамп и остановка
+        void PCD_DumpVersionToSerial() {
+            mfrc522.PCD_DumpVersionToSerial();
+        }
+
+        void PICC_HaltA() {
+            mfrc522.PICC_HaltA();
+        }
+
+        void PCD_StopCrypto1() {
+            mfrc522.PCD_StopCrypto1();
+        }
+
+        // Ссылка на UID для совместимости со старым кодом
+        MFRC522::Uid &uid = mfrc522.uid;
+
+        MFRC522& getRaw() {
+            return mfrc522;
+        }
+};
+
 #include <GyverTM1637.h> // Включаем здесь, чтобы тип GyverTM1637 был известен для extern
 
 // PIN Numbers : RESET + SDAs
@@ -40,7 +105,7 @@ extern int currentTotalCorrectCards;
 extern byte ssPins[NR_OF_READERS];
 extern const byte tagarray[NR_OF_READERS][4];
 
-extern MFRC522 mfrc522[NR_OF_READERS];
+extern WrapMFRC522 mfrc522[NR_OF_READERS];
 extern GyverTM1637 display;
 
 extern const uint8_t READER_SEGMENT_MAPPING[NR_OF_READERS];

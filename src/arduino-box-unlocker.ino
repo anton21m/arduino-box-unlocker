@@ -83,7 +83,7 @@ void setup() {
     // Пытаемся инициализировать чип пока не будет жив
     while (!success) { 
       mfrc522[reader].PCD_Init(ssPins[reader], RST_PIN);
-      version = mfrc522[reader].PCD_ReadRegister(MFRC522::VersionReg);
+      version = mfrc522[reader].PCD_ReadRegister(WrapMFRC522::VersionReg);
       
       if (version == 0x92) {
         success = true;
@@ -169,7 +169,7 @@ void loop() {
   for (uint8_t reader_idx = 0; reader_idx < NR_OF_READERS; reader_idx++) {
 
     // Проверка связи со считывателем в каждом цикле
-    byte version = mfrc522[reader_idx].PCD_ReadRegister(MFRC522::VersionReg);
+    byte version = mfrc522[reader_idx].PCD_ReadRegister(WrapMFRC522::VersionReg);
     if (version == 0x92) {
       readerInitialized[reader_idx] = true;
     } else {
