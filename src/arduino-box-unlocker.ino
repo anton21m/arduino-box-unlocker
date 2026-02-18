@@ -8,6 +8,17 @@ void dump_byte_array(byte * buffer, byte bufferSize);
 int blinkRedCycles = 0;
 int prevTotalCorrectCards = 0;
 
+int freeMemory() {
+  char top;
+  extern int __brkval;
+  extern char *__malloc_heap_start;
+
+  if (__brkval == 0) {
+    return &top - __malloc_heap_start;
+  } else {
+    return &top - (char *)__brkval;
+  }
+}
 
 void addBlinkRedLedCount() {
   blinkRedCycles = 10;
@@ -138,7 +149,10 @@ void setup() {
 }
 
 void loop() {
-
+  Serial.print(F("Free RAM: "));
+  Serial.print(freeMemory());
+  Serial.println(F(" bytes"));
+  
   // Делаем моргание если есть счетчик
   if (blinkRedCycles) {
     setLedStates(true, puzzleSolved);

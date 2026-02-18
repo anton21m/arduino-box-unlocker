@@ -1,18 +1,20 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <MFRC522.h>     // Включаем здесь, чтобы типы MFRC522 были известны для extern
+#include <MFRC522.h> // https://github.com/miguelbalboa/rfid
+#include "RfidDictionaryView.h" // https://github.com/pablo-sampaio/easy_mfrc522/
 
-class WrapMFRC522 {
+// #include <MFRC522.h> // https://github.com/miguelbalboa/rfid
+class Balboa_WrapMFRC522 { // https://github.com/miguelbalboa/rfid
     private:
         MFRC522 mfrc522;
 
     public:
         // Пустой конструктор для массивов
-        WrapMFRC522() : mfrc522(0, 0) {}
+        Balboa_WrapMFRC522() : mfrc522(0, 0) {}
         
         // Конструктор с параметрами
-        WrapMFRC522(byte ssPin, byte rstPin) : mfrc522(ssPin, rstPin) {}
+        Balboa_WrapMFRC522(byte ssPin, byte rstPin) : mfrc522(ssPin, rstPin) {}
 
         // Инициализация
         void PCD_Init() {
@@ -66,6 +68,53 @@ class WrapMFRC522 {
             return mfrc522;
         }
 };
+
+class Easy_WrapMFRC522 {
+    private:
+        MFRC522 mfrc522;
+        byte _ss, _rst;
+
+    public:
+        MFRC522::Uid uid; // Физическая переменная для loop()
+
+        Easy_WrapMFRC522() : mfrc522(0, 0), _ss(0), _rst(0) {
+            uid.size = 0;
+        }
+
+        void PCD_Init(byte ss, byte rst) {
+            _ss = ss; _rst = rst;
+            mfrc522.PCD_Init(ss, rst);
+            digitalWrite(ss, HIGH); // Гасим чип сразу после инициализации
+        }
+
+        bool PICC_IsNewCardPresent() {
+            if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
+                // Копируем данные в нашу структуру uid для loop()
+                uid.size = mfrc522.uid.size;
+                for (byte i = 0; i < 10; i++) uid.uidByte[i] = mfrc522.uid.uidByte[i];
+                return true;
+            }
+            return false;
+        }
+
+        // Заглушка, так как чтение уже произошло выше
+        bool PICC_ReadCardSerial() { return (uid.size > 0); }
+
+        byte PCD_ReadRegister(byte reg) {
+            return mfrc522.PCD_ReadRegister((MFRC522::PCD_Register)reg);
+        }
+
+        static const byte VersionReg = 0x37 << 1;
+        void PICC_HaltA() { mfrc522.PICC_HaltA(); uid.size = 0; }
+        void PCD_StopCrypto1() { mfrc522.PCD_StopCrypto1(); }
+        void PCD_DumpVersionToSerial() { mfrc522.PCD_DumpVersionToSerial(); }
+
+        void PCD_AntennaOn() {}
+        void PCD_AntennaOff() {}
+};
+
+
+using WrapMFRC522 = Easy_WrapMFRC522;
 
 #include <GyverTM1637.h> // Включаем здесь, чтобы тип GyverTM1637 был известен для extern
 
