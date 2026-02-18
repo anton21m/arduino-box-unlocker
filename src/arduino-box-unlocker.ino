@@ -13,26 +13,43 @@ void addBlinkRedLedCount() {
   blinkRedCycles = 10;
 }
 
+void showBlinkError(int reader_idx) {
+  for(int i=0; i <= reader_idx; i++) {
+    setLedStates(false, true); delay(100);
+    setLedStates(true, false); delay(100);
+  }
+  setLedStates(false, false);
+}
+
 void setLedStates(bool red_on, bool blue_on) {
-
-  // Common Anode 
-  //digitalWrite(A3, red_on ? LOW : HIGH);  // A3 is red LED (LOW = ON, HIGH = OFF)
-  //digitalWrite(A2, blue_on ? LOW : HIGH); // A2 is blue LED (LOW = ON, HIGH = OFF)
-
-  // Common Cathode
-  digitalWrite(A3, !red_on ? LOW : HIGH);  // A3 is red LED (LOW = ON, HIGH = OFF)
-  digitalWrite(A2, !blue_on ? LOW : HIGH); // A2 is blue LED (LOW = ON, HIGH = OFF)
+  digitalWrite(A2, !red_on ? LOW : HIGH);  // A2 is red LED (LOW = ON, HIGH = OFF)
+  digitalWrite(A3, !blue_on ? LOW : HIGH); // A3 is blue LED (LOW = ON, HIGH = OFF)
 }
 
 // Initialize LED pins and turn them off
 void initLed() {
-  pinMode(A3, OUTPUT); // red leds
-  pinMode(A2, OUTPUT); // blue led
+  pinMode(A2, OUTPUT); // red leds
+  pinMode(A3, OUTPUT); // blue led
   setLedStates(false, false); // Ensure both are off initially
 }
 
+// Функция ПОЛНОЙ реанимации всей шины
+void hardResetAllReaders() {
+  // делаем сброс циклически для борьбы с багом циклического зависания (fix от alexgyver)
+  Serial.println(F("!!! CRITICAL BUS RESET !!!"));
+  
+  digitalWrite(RST_PIN, LOW);          // Сбрасываем все модули
+  delay(20);                            // Ждем 20 мs
+  digitalWrite(RST_PIN, HIGH);           // Отпускаем сброс на всех модулях
+  delay(100);
+
+  for (uint8_t reader = 0; reader < NR_OF_READERS; reader++) {
+    mfrc522[reader].PCD_Init(ssPins[reader], RST_PIN); // Инициализируем заново (fix от alexgyver)
+    mfrc522[reader].PCD_AntennaOff(); 
+  }
+}
+
 void setup() {
-  //delay(1000);
   initLed();
   pinMode(RST_PIN, OUTPUT); // Убедимся, что пин настроен как выход
   digitalWrite(RST_PIN, LOW); // Импульс: сначала LOW
@@ -40,12 +57,8 @@ void setup() {
   digitalWrite(RST_PIN, HIGH); // затем HIGH для выхода из сброса
   delay(1000);                  // Даём время чипам ожить
 
-
   Serial.begin(9600);
   SPI.begin();
-
-  digitalWrite(RST_PIN, HIGH); 
-  delay(500); // Даем чипам полсекунды, чтобы прийти в себя после сброса
 
   //SPI.setClockDivider(SPI_CLOCK_DIV8); // не работает
   
@@ -66,28 +79,29 @@ void setup() {
   for (uint8_t reader = 0; reader < NR_OF_READERS; reader++) {
     bool success = false;
     byte version = 0x00;
-    int attempt = 0;
     
-    // Пытаемся инициализировать чип до XX раз
-    while (!success && attempt < 99999999999999) { 
+    // Пытаемся инициализировать чип пока не будет жив
+    while (!success) { 
       mfrc522[reader].PCD_Init(ssPins[reader], RST_PIN);
       version = mfrc522[reader].PCD_ReadRegister(MFRC522::VersionReg);
       
       if (version == 0x92) {
         success = true;
       } else {
-        
-        attempt++;
         Serial.print(F("Reader "));
         Serial.print(reader);
-        Serial.print(F(": Attempt "));
-        Serial.print(attempt);
         Serial.print(F(" failed (Code "));
         Serial.print(version);
         Serial.println(F("). Retrying..."));
         
         // Даём чипу время восстановиться перед следующей попыткой
         digitalWrite(ssPins[reader], HIGH);
+
+        hardResetAllReaders(); // Делаем сброс чтобы попытаться реанимировать
+
+        // ВИЗУАЛЬНЫЙ СИГНАЛ: мигаем красным столько раз, какой датчик сбоит
+        showBlinkError(reader);
+
         delay(1000); 
       }
     }
@@ -100,12 +114,8 @@ void setup() {
       mfrc522[reader].PCD_DumpVersionToSerial();
       initializedReadersCount++;
       readerInitialized[reader] = true; // Отметить как инициализированный
-    } else {
-      Serial.print(F("Reader "));
-      Serial.print(reader);
-      Serial.println(F(": FAILED after 5 attempts."));
-      readerInitialized[reader] = false;
-    }
+    } 
+    mfrc522[reader].PCD_AntennaOff(); // отключаем чтобы не было помех
     delay(50); // Короткая пауза перед следующим чипом
   }
   // ------------------------------------------------------------------
@@ -155,26 +165,13 @@ void loop() {
   // Сбрасываем состояние головоломки для каждой итерации
   InitializePuzzleState();
 
-  // делаем сброс циклически для борьбы с багом циклического зависания (fix от alexgyver)
-  digitalWrite(RST_PIN, HIGH);          // Сбрасываем все модули
-  delayMicroseconds(2);                 // Ждем 2 мкс
-  digitalWrite(RST_PIN, LOW);           // Отпускаем сброс на всех модулях
-  delay(50);
-
   // Сканирование всех считывателей
   for (uint8_t reader_idx = 0; reader_idx < NR_OF_READERS; reader_idx++) {
 
-    mfrc522[reader_idx].PCD_Init(ssPins[reader_idx], RST_PIN); // Инициализируем заново (fix от alexgyver)
-
-    // Включаем антенну только для текущего считывателя
-    mfrc522[reader_idx].PCD_AntennaOn();
-    delay(30); // Короткая пауза для стабилизации поля
-
     // Проверка связи со считывателем в каждом цикле
     byte version = mfrc522[reader_idx].PCD_ReadRegister(MFRC522::VersionReg);
-    if (version != 0x00 && version != 0xFF) {
+    if (version == 0x92) {
       readerInitialized[reader_idx] = true;
-      
     } else {
       Serial.print(":ERR Version: on id: ");
       Serial.print(reader_idx);
@@ -183,6 +180,11 @@ void loop() {
       readerInitialized[reader_idx] = false;
 
       digitalWrite(ssPins[reader_idx], HIGH);
+      hardResetAllReaders(); // Делаем сброс чтобы попытаться реанимировать
+
+      // ВИЗУАЛЬНЫЙ СИГНАЛ: мигаем красным столько раз, какой датчик сбоит
+      showBlinkError(reader_idx);
+
       delay(100);
     }
 

@@ -63,7 +63,7 @@
       "top": 280,
       "left": 109.8,
       "rotate": 180,
-      "attrs": { "color": "blue" }
+      "attrs": { "color": "red" }
     },
     {
       "type": "wokwi-led",
@@ -71,7 +71,7 @@
       "top": 280,
       "left": 157.8,
       "rotate": 180,
-      "attrs": { "color": "red", "flip": "" }
+      "attrs": { "color": "blue", "flip": "" }
     }
   ],
   "connections": [
