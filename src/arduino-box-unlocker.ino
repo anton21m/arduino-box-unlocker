@@ -44,7 +44,7 @@ void hardResetAllReaders() {
   delay(100);
 
   for (uint8_t reader = 0; reader < NR_OF_READERS; reader++) {
-    mfrc522[reader].PCD_Init(ssPins[reader], RST_PIN); // Инициализируем заново (fix от alexgyver)
+    mfrc522[reader].PCD_Init(); // Инициализируем заново (fix от alexgyver)
     mfrc522[reader].PCD_AntennaOff(); 
   }
 }
@@ -82,8 +82,10 @@ void setup() {
     
     // Пытаемся инициализировать чип пока не будет жив
     while (!success) { 
-      mfrc522[reader].PCD_Init(ssPins[reader], RST_PIN);
-      version = mfrc522[reader].PCD_ReadRegister(MFRC522::VersionReg);
+
+      mfrc522[reader].PCD_Init();
+
+      version = mfrc522[reader].PCD_GetVersion();
       
       if (version == 0x92) {
         success = true;
@@ -111,7 +113,7 @@ void setup() {
       Serial.print(F("Reader "));
       Serial.print(reader);
       Serial.print(F(": "));
-      mfrc522[reader].PCD_DumpVersionToSerial();
+      MFRC522Debug::PCD_DumpVersionToSerial(mfrc522[reader], Serial);
       initializedReadersCount++;
       readerInitialized[reader] = true; // Отметить как инициализированный
     } 
@@ -169,7 +171,7 @@ void loop() {
   for (uint8_t reader_idx = 0; reader_idx < NR_OF_READERS; reader_idx++) {
 
     // Проверка связи со считывателем в каждом цикле
-    byte version = mfrc522[reader_idx].PCD_ReadRegister(MFRC522::VersionReg);
+    byte version = mfrc522[reader_idx].PCD_GetVersion();
     if (version == 0x92) {
       readerInitialized[reader_idx] = true;
     } else {

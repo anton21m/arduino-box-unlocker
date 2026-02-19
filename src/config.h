@@ -1,7 +1,11 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <MFRC522.h>     // Включаем здесь, чтобы типы MFRC522 были известны для extern
+#include <MFRC522v2.h>
+#include <MFRC522DriverSPI.h>
+#include <MFRC522DriverPinSimple.h>
+#include <MFRC522Debug.h>
+
 #include <GyverTM1637.h> // Включаем здесь, чтобы тип GyverTM1637 был известен для extern
 
 // PIN Numbers : RESET + SDAs
@@ -40,7 +44,11 @@ extern int currentTotalCorrectCards;
 extern byte ssPins[NR_OF_READERS];
 extern const byte tagarray[NR_OF_READERS][4];
 
+
+extern MFRC522DriverPinSimple ssPinsDrivers[NR_OF_READERS];
+extern MFRC522DriverSPI spiDrivers[NR_OF_READERS];
 extern MFRC522 mfrc522[NR_OF_READERS];
+
 extern GyverTM1637 display;
 
 extern const uint8_t READER_SEGMENT_MAPPING[NR_OF_READERS];

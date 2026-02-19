@@ -32,8 +32,21 @@ int currentTotalCorrectCards = 0;
 
 byte ssPins[NR_OF_READERS] = {SS_1_PIN, SS_2_PIN, SS_3_PIN, SS_4_PIN, SS_5_PIN, SS_6_PIN};
 
-// Create an MFRC522 instance :
-MFRC522 mfrc522[NR_OF_READERS];
+// 1. Создаем массив пинов выбора (SS)
+MFRC522DriverPinSimple DrPinSimp[NR_OF_READERS] = {
+  {SS_1_PIN}, {SS_2_PIN}, {SS_3_PIN}, {SS_4_PIN}, {SS_5_PIN}, {SS_6_PIN}
+};
+
+// 2. Создаем массив SPI драйверов, связывая их с пинами
+MFRC522DriverSPI drivers[NR_OF_READERS] = {
+  {DrPinSimp[0]}, {DrPinSimp[1]}, {DrPinSimp[2]}, {DrPinSimp[3]}, {DrPinSimp[4]}, {DrPinSimp[5]}
+};
+
+// 3. Создаем массив экземпляров MFRC522
+MFRC522 mfrc522[NR_OF_READERS] = {
+  {drivers[0]}, {drivers[1]}, {drivers[2]}, {drivers[3]}, {drivers[4]}, {drivers[5]}
+};
+
 GyverTM1637 display(CLK_DISPLAY, DIO_DISPLAY);
 
 // Этот массив определяет, какой сегмент соответствует какому reader_idx
