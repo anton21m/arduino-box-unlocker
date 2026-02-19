@@ -8,6 +8,11 @@ void dump_byte_array(byte * buffer, byte bufferSize);
 int blinkRedCycles = 0;
 int prevTotalCorrectCards = 0;
 
+// control MISO through 74hct125 control SS-pins
+void setSSPin(int reader_idx, bool active) {
+  pinMode(ssPins[reader_idx], active ? LOW : HIGH);
+  delay(4);
+}
 
 void addBlinkRedLedCount() {
   blinkRedCycles = 10;
@@ -45,6 +50,7 @@ void hardResetAllReaders() {
 
   for (uint8_t reader = 0; reader < NR_OF_READERS; reader++) {
     mfrc522[reader].PCD_Init(); // Инициализируем заново (fix от alexgyver)
+    delay(4);
     mfrc522[reader].PCD_AntennaOff(); 
   }
 }
@@ -79,11 +85,14 @@ void setup() {
   for (uint8_t reader = 0; reader < NR_OF_READERS; reader++) {
     bool success = false;
     byte version = 0x00;
+
+    //setSSPin(reader, true); // Нельзя делает spi ошибки
     
     // Пытаемся инициализировать чип пока не будет жив
-    while (!success) { 
+    while (!success) {
 
       mfrc522[reader].PCD_Init();
+      delay(4);
 
       version = mfrc522[reader].PCD_GetVersion();
       
@@ -118,6 +127,8 @@ void setup() {
       readerInitialized[reader] = true; // Отметить как инициализированный
     } 
     mfrc522[reader].PCD_AntennaOff(); // отключаем чтобы не было помех
+
+    setSSPin(reader, false);
     delay(50); // Короткая пауза перед следующим чипом
   }
   // ------------------------------------------------------------------
@@ -149,7 +160,7 @@ void loop() {
 
   // Фиксированная задержка между полными циклами сканирования.
   // Обратите внимание: эта задержка замедляет опрос считывателей.
-  delay(1000);
+  delay(500);
   
   // Делаем моргание если есть счетчик
   if (blinkRedCycles) {
@@ -162,14 +173,13 @@ void loop() {
   }
 
   prevTotalCorrectCards = currentTotalCorrectCards;
-
   
   // Сбрасываем состояние головоломки для каждой итерации
   InitializePuzzleState();
 
   // Сканирование всех считывателей
   for (uint8_t reader_idx = 0; reader_idx < NR_OF_READERS; reader_idx++) {
-
+    //setSSPin(reader_idx, true);  // Нельзя делает spi ошибки
     // Проверка связи со считывателем в каждом цикле
     byte version = mfrc522[reader_idx].PCD_GetVersion();
     if (version == 0x92) {
@@ -218,14 +228,16 @@ void loop() {
       } else {
         Serial.println("Unknown Tag on Reader " + String(reader_idx));
       }
-
-      mfrc522[reader_idx].PICC_HaltA();
-      mfrc522[reader_idx].PCD_StopCrypto1();
     }
 
     // Выключаем антенну, чтобы она не мешала другим считывателям
     mfrc522[reader_idx].PCD_AntennaOff();
-    }
+
+    mfrc522[reader_idx].PICC_HaltA();
+    mfrc522[reader_idx].PCD_StopCrypto1();
+
+    setSSPin(reader_idx, false);
+  }
 
   // Агрегация данных после сканирования всех считывателей
   for (uint8_t i = 0; i < NR_OF_READERS; i++) {

@@ -39,7 +39,8 @@ MFRC522DriverPinSimple DrPinSimp[NR_OF_READERS] = {
 
 // 2. Создаем массив SPI драйверов, связывая их с пинами
 MFRC522DriverSPI drivers[NR_OF_READERS] = {
-  {DrPinSimp[0]}, {DrPinSimp[1]}, {DrPinSimp[2]}, {DrPinSimp[3]}, {DrPinSimp[4]}, {DrPinSimp[5]}
+  {DrPinSimp[0]}, {DrPinSimp[1]}, {DrPinSimp[2]},
+  {DrPinSimp[3]}, {DrPinSimp[4]}, {DrPinSimp[5]}
 };
 
 // 3. Создаем массив экземпляров MFRC522

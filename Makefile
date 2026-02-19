@@ -23,9 +23,8 @@ compile-arduino:
 	# Rename the main .ino file to sketch.ino, which arduino-cli expects by default
 	mv ./build/sketch/arduino-box-unlocker.ino ./build/sketch/sketch.ino
 
-	# arduino-cli lib install MFRC522
+	arduino-cli lib install "RFID_MFRC522v2"
 
-	# arduino-cli lib uninstall "MFRC522" && arduino-cli lib install "MFRC522-spi-i2c-uart-async"
 	arduino-cli lib install GyverTM1637
 	arduino-cli compile --fqbn arduino:avr:uno ./build/sketch --output-dir build
 
